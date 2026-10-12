@@ -395,12 +395,6 @@
     </div>
   </header>
 
-  <div class="section-head">
-    <span class="label">Umsóknir</span>
-    <span class="count" id="appCount">—</span>
-    <span class="rule"></span>
-  </div>
-
   <div class="cards" id="cards"></div>
 
   <footer>
@@ -454,8 +448,6 @@ apps.forEach((a, i) => {
   });
   cards.appendChild(el);
 });
-document.getElementById('appCount').textContent = `(${roman[apps.length - 1]})`;
-
 const appView = document.getElementById('appView');
 const appFrame = document.getElementById('appFrame');
 const appTitle = document.getElementById('appTitle');
