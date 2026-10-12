@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="is">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fura — Stjórnborð</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌲</text></svg>">
+<style>
+  :root {
+    --bg: #0b1310;
+    --bg-2: #0f1b16;
+    --text: #e8f0ea;
+    --muted: #96a39b;
+    --accent: #6ba371;
+    --border: rgba(255,255,255,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+    background:
+      radial-gradient(1200px 600px at 20% -10%, rgba(107,163,113,0.18), transparent 60%),
+      radial-gradient(900px 500px at 85% 10%, rgba(74,122,79,0.14), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ---------- Overview ---------- */
+  .overview {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 32px 80px;
+  }
+  .top {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 44px;
+    flex-wrap: wrap;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .brand-logo {
+    width: 56px; height: 56px;
+    display: grid; place-items: center;
+    background: linear-gradient(135deg, var(--accent), #4a7a4f);
+    border-radius: 14px;
+    font-size: 32px;
+    box-shadow: 0 10px 24px rgba(107,163,113,0.3);
+  }
+  .brand-text h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .brand-text .sub {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 2px;
+  }
+  .clock-wrap {
+    text-align: right;
+    line-height: 1;
+  }
+  .clock {
+    font-size: 54px;
+    font-weight: 300;
+    letter-spacing: 1px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
+  .clock-date {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 6px;
+    text-transform: capitalize;
+  }
+
+  /* ---------- Cards ---------- */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  .card {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    border-radius: 20px;
+    overflow: hidden;
+    cursor: pointer;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    transition: transform .18s ease, box-shadow .18s ease;
+    display: block;
+    text-decoration: none;
+    color: inherit;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(107,163,113,0.4);
+  }
+  .card-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center top;
+    transition: transform .4s ease;
+  }
+  .card:hover .card-bg { transform: scale(1.05); }
+  .card-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.85) 100%);
+  }
+  .card-content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 20px 22px;
+  }
+  .card-title {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+    margin-bottom: 4px;
+  }
+  .card-desc {
+    font-size: 13px;
+    color: rgba(255,255,255,0.85);
+    text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+  }
+  .card-ext {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 32px; height: 32px;
+    display: grid; place-items: center;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(8px);
+    border-radius: 10px;
+    color: #fff;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity .15s;
+    z-index: 2;
+    text-decoration: none;
+  }
+  .card:hover .card-ext { opacity: 1; }
+  .card-ext:hover { background: rgba(107,163,113,0.9); }
+
+  /* ---------- App view (iframe) ---------- */
+  .app-view {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 100;
+    display: none;
+    flex-direction: column;
+  }
+  .app-view.active { display: flex; }
+  .app-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: #0b1310;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    height: 52px;
+    flex-shrink: 0;
+  }
+  .app-bar .back {
+    background: rgba(255,255,255,0.08);
+    border: 0;
+    color: var(--text);
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: grid; place-items: center;
+    font-size: 18px;
+  }
+  .app-bar .back:hover { background: rgba(107,163,113,0.3); }
+  .app-bar .title {
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .app-bar .actions {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+  }
+  .app-bar .btn {
+    background: rgba(255,255,255,0.08);
+    border: 0;
+    color: var(--text);
+    padding: 7px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .app-bar .btn:hover { background: rgba(107,163,113,0.3); }
+  .app-view iframe {
+    flex: 1;
+    border: 0;
+    width: 100%;
+    background: #fff;
+  }
+
+  @media (max-width: 600px) {
+    .overview { padding: 24px 18px 60px; }
+    .top { margin-bottom: 32px; }
+    .brand-text h1 { font-size: 22px; }
+    .clock { font-size: 40px; }
+    .cards { grid-template-columns: 1fr; gap: 14px; }
+    .card { aspect-ratio: 16/9; }
+    .card-title { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="overview" id="overview">
+  <div class="top">
+    <div class="brand">
+      <div class="brand-logo">🌲</div>
+      <div class="brand-text">
+        <h1>Fura Stjórnborð</h1>
+        <div class="sub">Allt á einum stað</div>
+      </div>
+    </div>
+    <div class="clock-wrap">
+      <div class="clock" id="clock">—</div>
+      <div class="clock-date" id="clockDate">—</div>
+    </div>
+  </div>
+  <div class="cards" id="cards"></div>
+</div>
+
+<div class="app-view" id="appView">
+  <div class="app-bar">
+    <button class="back" id="backBtn" title="Til baka">←</button>
+    <div class="title" id="appTitle"></div>
+    <div class="actions">
+      <button class="btn" id="reloadBtn">↻ Endurhlaða</button>
+      <button class="btn" id="newTabBtn">↗ Nýr gluggi</button>
+    </div>
+  </div>
+  <iframe id="appFrame" allow="geolocation; microphone; camera; clipboard-read; clipboard-write"></iframe>
+</div>
+
+<script>
+const apps = [
+  { id: 'fura',     name: 'Fura.is',          desc: 'Opinber vefsíða',               url: 'https://fura.is',                              img: 'images/fura.jpg' },
+  { id: 'handbok',  name: 'Handbók',          desc: 'Vélahandbók — leiðbeiningar',   url: 'https://fura-is.github.io/fura-handbok/',      img: 'images/handbok.jpg' },
+  { id: 'scrapmap', name: 'ScrapMap',         desc: 'Sölupípan á korti',             url: 'https://scrapmaps-b3487.web.app',              img: 'images/scrapmap-login.jpg' },
+  { id: 'bubbi',    name: 'Tætarinn',         desc: 'Dagleg Bubbi skýrsla',          url: 'https://bubbi-report.web.app',                 img: 'images/bubbi.jpg' },
+  { id: 'stark',    name: 'STARK',            desc: 'Verð á járni → Excel',          url: 'https://fura-stark.web.app/',                  img: 'images/stark.jpg' }
+];
+
+const cards = document.getElementById('cards');
+apps.forEach(a => {
+  const el = document.createElement('a');
+  el.className = 'card';
+  el.href = '#' + a.id;
+  el.innerHTML = `
+    <div class="card-bg" style="background-image:url('${a.img}')"></div>
+    <div class="card-overlay"></div>
+    <a class="card-ext" href="${a.url}" target="_blank" rel="noopener" title="Opna í nýjum glugga" onclick="event.stopPropagation()">↗</a>
+    <div class="card-content">
+      <div class="card-title">${a.name}</div>
+      <div class="card-desc">${a.desc}</div>
+    </div>
+  `;
+  el.addEventListener('click', (e) => {
+    e.preventDefault();
+    openApp(a);
+  });
+  cards.appendChild(el);
+});
+
+const appView = document.getElementById('appView');
+const appFrame = document.getElementById('appFrame');
+const appTitle = document.getElementById('appTitle');
+const backBtn = document.getElementById('backBtn');
+const reloadBtn = document.getElementById('reloadBtn');
+const newTabBtn = document.getElementById('newTabBtn');
+
+let currentApp = null;
+function openApp(app) {
+  currentApp = app;
+  appTitle.textContent = app.name;
+  appFrame.src = app.url;
+  appView.classList.add('active');
+  document.body.style.overflow = 'hidden';
+  history.pushState({ app: app.id }, '', '#' + app.id);
+}
+function closeApp() {
+  appView.classList.remove('active');
+  appFrame.src = 'about:blank';
+  currentApp = null;
+  document.body.style.overflow = '';
+  if (location.hash) history.pushState({}, '', location.pathname);
+}
+backBtn.onclick = closeApp;
+reloadBtn.onclick = () => { if (currentApp) appFrame.src = currentApp.url; };
+newTabBtn.onclick = () => { if (currentApp) window.open(currentApp.url, '_blank'); };
+
+window.addEventListener('popstate', () => {
+  const h = location.hash.replace('#', '');
+  const app = apps.find(a => a.id === h);
+  if (app) openApp(app);
+  else closeApp();
+});
+
+// deep-link on load
+window.addEventListener('load', () => {
+  const h = location.hash.replace('#', '');
+  const app = apps.find(a => a.id === h);
+  if (app) openApp(app);
+});
+
+// Clock
+const clock = document.getElementById('clock');
+const clockDate = document.getElementById('clockDate');
+function tick() {
+  const d = new Date();
+  const h = String(d.getHours()).padStart(2, '0');
+  const m = String(d.getMinutes()).padStart(2, '0');
+  const s = String(d.getSeconds()).padStart(2, '0');
+  clock.textContent = `${h}:${m}:${s}`;
+  const days = ['sunnudagur','mánudagur','þriðjudagur','miðvikudagur','fimmtudagur','föstudagur','laugardagur'];
+  const months = ['janúar','febrúar','mars','apríl','maí','júní','júlí','ágúst','september','október','nóvember','desember'];
+  clockDate.textContent = `${days[d.getDay()]}, ${d.getDate()}. ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+tick();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>
