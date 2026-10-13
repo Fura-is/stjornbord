@@ -262,6 +262,14 @@
     letter-spacing: -0.01em;
     line-height: 1.1;
   }
+  .card-title .ext-mark {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--gold);
+    vertical-align: middle;
+    margin-left: 4px;
+    opacity: 0.7;
+  }
   .card-desc {
     font-size: 11px;
     letter-spacing: 0.1em;
@@ -416,13 +424,14 @@
 </div>
 
 <script>
+// newTab: true → open directly in new tab (needed for Firebase Auth apps, storage partitioning breaks them in iframe)
 const apps = [
   { id: 'fura',     name: 'Fura.is',     desc: 'Vefsíða',          url: 'https://fura.is',                              img: 'images/fura.jpg' },
   { id: 'handbok',  name: 'Handbók',     desc: 'Vélaleiðbeiningar', url: 'https://fura-is.github.io/fura-handbok/',      img: 'images/handbok.jpg' },
-  { id: 'scrapmap', name: 'ScrapMap',    desc: 'Sölupípan',         url: 'https://scrapmaps-b3487.web.app',              img: 'images/scrapmap-login.jpg' },
+  { id: 'scrapmap', name: 'ScrapMap',    desc: 'Sölupípan',         url: 'https://scrapmaps-b3487.web.app',              img: 'images/scrapmap-login.jpg', newTab: true },
   { id: 'bubbi',    name: 'Tætarinn',    desc: 'Bubbi skýrsla',     url: 'https://bubbi-report.web.app',                 img: 'images/bubbi.jpg' },
-  { id: 'stark',    name: 'STARK',       desc: 'Fjármál',           url: 'https://fura-stark.web.app/',                  img: 'images/stark.jpg' },
-  { id: 'beidnarapp', name: 'Beiðnarapp', desc: 'Starfsmannaapp',   url: 'https://fura-app-d8efe.web.app',                img: 'images/beidnarapp.jpg' }
+  { id: 'stark',    name: 'STARK',       desc: 'Fjármál',           url: 'https://fura-stark.web.app/',                  img: 'images/stark.jpg', newTab: true },
+  { id: 'beidnarapp', name: 'Beiðnarapp', desc: 'Starfsmannaapp',   url: 'https://fura-app-d8efe.web.app',                img: 'images/beidnarapp.jpg', newTab: true }
 ];
 
 const cards = document.getElementById('cards');
@@ -430,23 +439,26 @@ const roman = ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
 apps.forEach((a, i) => {
   const el = document.createElement('a');
   el.className = 'card';
-  el.href = '#' + a.id;
+  el.href = a.newTab ? a.url : '#' + a.id;
+  if (a.newTab) { el.target = '_blank'; el.rel = 'noopener'; }
   el.innerHTML = `
     <div class="card-media">
       <span class="card-num">${roman[i]}</span>
       <div class="card-bg" style="background-image:url('${a.img}')"></div>
       <div class="card-overlay"></div>
-      <a class="card-ext" href="${a.url}" target="_blank" rel="noopener" title="Opna í nýjum glugga" onclick="event.stopPropagation()">↗</a>
+      ${a.newTab ? '' : `<a class="card-ext" href="${a.url}" target="_blank" rel="noopener" title="Opna í nýjum glugga" onclick="event.stopPropagation()">↗</a>`}
     </div>
     <div class="card-caption">
-      <div class="card-title">${a.name}</div>
+      <div class="card-title">${a.name}${a.newTab ? ' <span class="ext-mark">↗</span>' : ''}</div>
       <div class="card-desc">${a.desc}</div>
     </div>
   `;
-  el.addEventListener('click', (e) => {
-    e.preventDefault();
-    openApp(a);
-  });
+  if (!a.newTab) {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      openApp(a);
+    });
+  }
   cards.appendChild(el);
 });
 const appView = document.getElementById('appView');
